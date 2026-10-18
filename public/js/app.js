@@ -55,6 +55,23 @@
     update();
   }
 
+  // Marks entry: AB disables the box, Enter jumps to the next student.
+  const marks = $('#marks-form');
+  if (marks) {
+    const inputs = $$('.marks-input', marks);
+    $$('input[name=absent]', marks).forEach(cb => cb.addEventListener('change', () => {
+      const input = $('.marks-input', cb.closest('li'));
+      input.disabled = cb.checked;
+      if (cb.checked) input.value = '';
+    }));
+    inputs.forEach((input, i) => input.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const next = inputs.slice(i + 1).find(x => !x.disabled);
+      if (next) next.focus(); else marks.requestSubmit();
+    }));
+  }
+
   // Attendance: counts and all/none shortcuts.
   const att = $('#attendance-form');
   if (att) {

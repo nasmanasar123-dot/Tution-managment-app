@@ -1,6 +1,7 @@
 const express = require('express');
 const { db } = require('../lib/db');
 const { ensureDues, totals, monthStatus, pendingList } = require('../lib/fees');
+const { studentHistory, subjects } = require('../lib/performance');
 const { today, currentMonth, addMonths, isDate, isMonth } = require('../lib/util');
 
 const router = express.Router();
@@ -88,7 +89,10 @@ router.get('/students/:id', (req, res, next) => {
   `).get(m, m, student.id);
   const absences = db.prepare(`SELECT date FROM attendance WHERE student_id = ? AND status = 'A' ORDER BY date DESC LIMIT 10`).all(student.id);
 
-  res.render('students/show', { title: student.name, student, t: totals(student.id), months, payments, att, absences });
+  const history = studentHistory(student.id);
+  res.render('students/show', {
+    title: student.name, student, t: totals(student.id), months, payments, att, absences, history, subjects: subjects(),
+  });
 });
 
 router.get('/students/:id/edit', (req, res, next) => {

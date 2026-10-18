@@ -25,6 +25,52 @@
   </form>
 </section>
 
+<section class="card" id="exams">
+  <h2>Exams</h2>
+  <p class="small muted">Maximum marks are per subject. Deleting an exam deletes its marks.</p>
+  <% exams.forEach(e => { %>
+    <div class="inline-form">
+      <form class="inline-form" method="post" action="/settings/exams/<%= e.id %>" style="flex: 1; margin: 0">
+        <input name="name" value="<%= e.name %>" required aria-label="Exam name">
+        <input name="max_marks" type="number" min="1" max="1000" value="<%= e.max_marks %>" required aria-label="Maximum marks">
+        <button class="btn btn-sm">Save</button>
+      </form>
+      <form method="post" action="/settings/exams/<%= e.id %>/delete" data-confirm="Delete <%= e.name %><%= e.students ? ` and the marks of ${e.students} students` : '' %>?">
+        <button class="btn-danger-link small">Delete</button>
+      </form>
+    </div>
+  <% }) %>
+  <form class="inline-form" method="post" action="/settings/exams">
+    <input name="name" placeholder="New exam, e.g. Model Exam" required>
+    <input name="max_marks" type="number" min="1" max="1000" placeholder="Max" required>
+    <button class="btn btn-sm btn-primary">Add exam</button>
+  </form>
+  <form class="inline-form" method="post" action="/settings/pass" style="margin-top: 1rem">
+    <label class="small" for="pass_percent">Pass mark (%) in each subject</label>
+    <input id="pass_percent" name="pass_percent" type="number" min="1" max="99" value="<%= settings.pass_percent %>" required>
+    <button class="btn btn-sm">Save</button>
+  </form>
+</section>
+
+<section class="card" id="subjects">
+  <h2>Subjects</h2>
+  <% subjects.forEach(s => { %>
+    <div class="inline-form">
+      <form class="inline-form" method="post" action="/settings/subjects/<%= s.id %>" style="flex: 1; margin: 0">
+        <input name="name" value="<%= s.name %>" required aria-label="Subject name">
+        <button class="btn btn-sm">Rename</button>
+      </form>
+      <form method="post" action="/settings/subjects/<%= s.id %>/delete" data-confirm="Delete <%= s.name %> and all its marks?">
+        <button class="btn-danger-link small">Delete</button>
+      </form>
+    </div>
+  <% }) %>
+  <form class="inline-form" method="post" action="/settings/subjects">
+    <input name="name" placeholder="New subject" required>
+    <button class="btn btn-sm btn-primary">Add subject</button>
+  </form>
+</section>
+
 <section class="card">
   <h2>Center details</h2>
   <p class="small muted">Shown on receipts.</p>

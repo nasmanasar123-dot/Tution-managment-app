@@ -1,0 +1,217 @@
+<%- include('../partials/header') %>
+<% const k = a.kpis;
+const medal = r => ['🥇', '🥈', '🥉'][r - 1] || '';
+const scopeLabel = classNo ? `Class ${classNo}` : 'School';
+const qs = extra => '/performance?' + new URLSearchParams({ exam: examId || 'all', ...(classNo ? { class: classNo } : {}), ...extra }).toString();
+const gradeClass = g => ({ A1: 'ok', A2: 'ok', B1: 'ok', B2: 'warn', C1: 'warn', C2: 'warn', D: 'danger', E: 'danger' }[g]); %>
+
+<div class="page-head">
+  <div>
+    <h1>Results &amp; Toppers</h1>
+    <p class="muted"><%= exam ? exam.name : 'All exams combined' %> · <%= classNo ? `Class ${classNo}` : 'Whole school' %></p>
+  </div>
+  <div class="form-actions">
+    <a class="btn" href="<%= qs({ format: 'csv' }) %>">Export CSV</a>
+    <a class="btn btn-primary" href="/performance/marks">Enter Marks</a>
+  </div>
+</div>
+
+<form class="filters card" method="get" action="/performance">
+  <select name="exam" onchange="this.form.submit()" aria-label="Exam">
+    <% exams.forEach(e => { %><option value="<%= e.id %>" <%= e.id === examId ? 'selected' : '' %>><%= e.name %><%= e.students ? '' : ' (no marks yet)' %></option><% }) %>
+    <option value="all" <%= !examId ? 'selected' : '' %>>All exams combined</option>
+  </select>
+  <select name="class" onchange="this.form.submit()" aria-label="Class">
+    <option value="">Whole school</option>
+    <% [8, 9, 10].forEach(c => { %><option value="<%= c %>" <%= c === classNo ? 'selected' : '' %>>Class <%= c %></option><% }) %>
+  </select>
+  <noscript><button class="btn">Show</button></noscript>
+</form>
+
+<% if (!k.assessed) { %>
+  <section class="card empty">
+    <h2><%= hasAny ? 'No marks for this selection yet' : 'No marks entered yet' %></h2>
+    <p class="muted">Enter exam marks to see toppers, subject analysis and more.</p>
+    <a class="btn btn-primary" href="/performance/marks">Enter Marks</a>
+  </section>
+<% } else { %>
+
+<section class="stats">
+  <div class="stat"><span class="stat-label">Students assessed</span><strong class="stat-value"><%= k.assessed %></strong></div>
+  <div class="stat"><span class="stat-label"><%= scopeLabel %> average</span><strong class="stat-value"><%= k.average %>%</strong><span class="muted small">Highest <%= k.highest %>%</span></div>
+  <div class="stat"><span class="stat-label">Pass rate</span><strong class="stat-value"><%= k.passRate %>%</strong><span class="muted small">Pass mark <%= a.pass %>% in every subject</span></div>
+  <div class="stat"><span class="stat-label">Distinctions</span><strong class="stat-value"><%= k.distinctions %></strong><span class="muted small">75% and above</span></div>
+</section>
+
+<section class="card">
+  <h2><%= scopeLabel %> toppers</h2>
+  <div class="podium">
+    <% a.toppers.slice(0, 3).forEach(s => { const r = classNo ? s.classRank : s.rank; %>
+      <a class="podium-card rank-<%= r %>" href="/students/<%= s.id %>">
+        <span class="medal"><%= medal(r) %></span>
+        <strong><%= s.name %></strong>
+        <span class="muted small">Class <%= s.class %>-<%= s.division %></span>
+        <span class="podium-pct"><%= s.pct %>%</span>
+        <span class="badge badge-ok">Grade <%= s.grade %></span>
+      </a>
+    <% }) %>
+  </div>
+  <% if (a.toppers.length > 3) { %>
+    <ol class="rank-list">
+      <% a.toppers.slice(3).forEach(s => { %>
+        <li>
+          <span class="rank-no"><%= classNo ? s.classRank : s.rank %></span>
+          <a class="list-main" href="/students/<%= s.id %>"><strong><%= s.name %></strong><span class="muted small">Class <%= s.class %>-<%= s.division %></span></a>
+          <span class="badge badge-<%= gradeClass(s.grade) %>"><%= s.grade %></span>
+          <strong class="pct"><%= s.pct %>%</strong>
+        </li>
+      <% }) %>
+    </ol>
+  <% } %>
+</section>
+
+<% if (!classNo) { %>
+<section class="card">
+  <h2>Class toppers</h2>
+  <div class="grid-3">
+    <% a.classToppers.forEach(c => { %>
+      <div class="class-col">
+        <div class="row-between"><strong>Class <%= c.class %></strong><span class="muted small">avg <%= c.average %>% · <%= c.count %> students</span></div>
+        <% if (!c.top.length) { %><p class="muted small">No marks yet.</p><% } %>
+        <ul class="list">
+          <% c.top.forEach(s => { %>
+            <li>
+              <span class="medal-sm"><%= medal(s.classRank) || s.classRank %></span>
+              <a class="list-main" href="/students/<%= s.id %>"><strong><%= s.name %></strong><span class="muted small"><%= s.class %>-<%= s.division %></span></a>
+              <strong class="pct"><%= s.pct %>%</strong>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+
+<section class="card">
+  <h2>Division toppers</h2>
+  <div class="batch-grid">
+    <% a.divisions.forEach(d => { %>
+      <div class="batch-tile <%= d.count ? '' : 'muted-tile' %>">
+        <div class="row-between"><strong><%= d.class %>-<%= d.division %></strong><span class="small muted">avg <%= d.count ? d.average + '%' : '–' %></span></div>
+        <% if (d.toppers.length) { %>
+          <% d.toppers.forEach(s => { %><a class="small" href="/students/<%= s.id %>">🏆 <%= s.name %></a><% }) %>
+          <span class="small"><strong><%= d.toppers[0].pct %>%</strong><%= d.toppers.length > 1 ? ' (tie)' : '' %></span>
+        <% } else { %><span class="small muted">No marks</span><% } %>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Subject toppers</h2>
+    <ul class="list">
+      <% a.subjectStats.forEach(sub => { %>
+        <li>
+          <div class="list-main">
+            <strong><%= sub.name %></strong>
+            <span class="muted small"><%= sub.toppers.length ? sub.toppers.slice(0, 3).map(s => `${s.name} (${s.class}-${s.division})`).join(', ') + (sub.toppers.length > 3 ? ` +${sub.toppers.length - 3} more` : '') : 'No marks' %></span>
+          </div>
+          <% if (sub.best != null) { %><strong class="pct"><%= sub.best %>%</strong><% } %>
+        </li>
+      <% }) %>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Subject averages</h2>
+    <% const weakest = a.subjectStats.filter(s => s.count).sort((x, y) => x.average - y.average)[0]; %>
+    <% a.subjectStats.forEach(sub => { %>
+      <div class="progress-row">
+        <div class="row-between"><span><%= sub.name %></span><span class="small"><strong><%= sub.average %>%</strong> <span class="muted">· <%= sub.passRate %>% passed</span></span></div>
+        <div class="bar <%= weakest && sub.id === weakest.id ? 'bar-warn' : '' %>"><span style="width: <%= sub.average %>%"></span></div>
+      </div>
+    <% }) %>
+    <% if (weakest) { %><p class="small muted">Weakest subject: <strong><%= weakest.name %></strong>. Consider extra classes here.</p><% } %>
+  </section>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Grade distribution</h2>
+    <% const maxG = Math.max(...a.gradeDist.map(g => g.count), 1); %>
+    <div class="bars bars-sm" role="img" aria-label="Grade distribution">
+      <% a.gradeDist.forEach(g => { %>
+        <div class="bar-col" title="<%= g.grade %> (<%= g.min %>%+): <%= g.count %> students">
+          <span class="bar-val"><%= g.count %></span>
+          <div class="bar-fill grade-<%= gradeClass(g.grade) %>" style="height: <%= Math.max(2, Math.round(g.count / maxG * 100)) %>%"></div>
+          <span class="bar-label"><%= g.grade %></span>
+        </div>
+      <% }) %>
+    </div>
+    <p class="small muted">A1 91%+ · A2 81% · B1 71% · B2 61% · C1 51% · C2 41% · D 33% · E below 33%</p>
+  </section>
+
+  <section class="card">
+    <h2>Division averages</h2>
+    <% a.divisions.filter(d => d.count).sort((x, y) => y.average - x.average).forEach(d => { %>
+      <div class="progress-row">
+        <div class="row-between"><span><%= d.class %>-<%= d.division %></span><span class="small"><strong><%= d.average %>%</strong> <span class="muted">· <%= d.count %> students</span></span></div>
+        <div class="bar"><span style="width: <%= d.average %>%"></span></div>
+      </div>
+    <% }) %>
+  </section>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Most improved</h2>
+    <% if (!exam) { %>
+      <p class="muted small">Pick a single exam to compare it with the previous one.</p>
+    <% } else if (!a.prevExam) { %>
+      <p class="muted small">No earlier exam with marks to compare with.</p>
+    <% } else if (!a.improved.length) { %>
+      <p class="muted small">Nobody improved on <%= a.prevExam.name %>.</p>
+    <% } else { %>
+      <p class="muted small">Compared with <%= a.prevExam.name %></p>
+      <ul class="list">
+        <% a.improved.forEach(s => { %>
+          <li>
+            <a class="list-main" href="/students/<%= s.id %>"><strong><%= s.name %></strong><span class="muted small"><%= s.class %>-<%= s.division %> · <%= s.before %>% → <%= s.pct %>%</span></a>
+            <span class="badge badge-ok">+<%= s.change %></span>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+
+  <section class="card">
+    <h2>Needs attention</h2>
+    <% if (!a.attention.length) { %><p class="muted small">Everyone passed every subject. 🎉</p><% } %>
+    <ul class="list">
+      <% a.attention.forEach(s => { %>
+        <li>
+          <a class="list-main" href="/students/<%= s.id %>"><strong><%= s.name %></strong>
+            <span class="muted small"><%= s.class %>-<%= s.division %><%= s.failedNames.length ? ' · Below pass in ' + s.failedNames.join(', ') : '' %></span></a>
+          <strong class="pct warn"><%= s.pct %>%</strong>
+        </li>
+      <% }) %>
+    </ul>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Attendance vs marks</h2>
+  <div class="grid-3">
+    <% a.attendance.forEach(b => { %>
+      <div class="stat-flat">
+        <span class="stat-label">Attendance <%= b.label %></span>
+        <strong class="stat-value"><%= b.count ? b.average + '%' : '–' %></strong>
+        <span class="muted small">average marks · <%= b.count %> students</span>
+      </div>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+<%- include('../partials/footer') %>

@@ -1,0 +1,63 @@
+<%- include('../partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Enter Marks</h1>
+    <p class="muted">Choose the exam, class and subject</p>
+  </div>
+  <a class="btn" href="/performance">Results</a>
+</div>
+
+<form class="filters card" method="get" action="/performance/marks">
+  <select name="exam" required aria-label="Exam">
+    <option value="">Exam…</option>
+    <% exams.forEach(e => { %><option value="<%= e.id %>" <%= exam && e.id === exam.id ? 'selected' : '' %>><%= e.name %> (out of <%= e.max_marks %>)</option><% }) %>
+  </select>
+  <select name="batch" required aria-label="Class">
+    <option value="">Class…</option>
+    <% batches.forEach(b => { %><option value="<%= b.id %>" <%= batch && b.id === batch.id ? 'selected' : '' %>>Class <%= b.class %>-<%= b.division %></option><% }) %>
+  </select>
+  <select name="subject" required aria-label="Subject">
+    <option value="">Subject…</option>
+    <% subjects.forEach(s => { %><option value="<%= s.id %>" <%= subject && s.id === subject.id ? 'selected' : '' %>><%= s.name %><%= done.has(s.id) ? ' ✓' : '' %></option><% }) %>
+  </select>
+  <button class="btn btn-primary">Open</button>
+</form>
+
+<% if (exam && batch) { %>
+  <div class="chips">
+    <% subjects.forEach(s => { %>
+      <a class="chip <%= subject && s.id === subject.id ? 'chip-on' : done.has(s.id) ? 'chip-done' : '' %>" href="/performance/marks?exam=<%= exam.id %>&batch=<%= batch.id %>&subject=<%= s.id %>"><%= done.has(s.id) ? '✓ ' : '' %><%= s.name %></a>
+    <% }) %>
+  </div>
+<% } %>
+
+<% if (exam && subject && batch) { %>
+  <% if (!students.length) { %>
+    <section class="card"><p class="muted">No active students in Class <%= batch.class %>-<%= batch.division %>.</p></section>
+  <% } else { %>
+  <form class="card" method="post" action="/performance/marks" id="marks-form">
+    <input type="hidden" name="exam_id" value="<%= exam.id %>">
+    <input type="hidden" name="subject_id" value="<%= subject.id %>">
+    <input type="hidden" name="batch_id" value="<%= batch.id %>">
+    <div class="row-between">
+      <h2><%= subject.name %> · <%= exam.name %> · <%= batch.class %>-<%= batch.division %></h2>
+      <span class="badge">out of <%= exam.max_marks %></span>
+    </div>
+    <p class="small muted">Leave a box empty if marks aren't available yet. Tick AB if the student was absent.</p>
+    <ul class="marks-list">
+      <% students.forEach(s => { const absent = s.entered && s.marks == null; %>
+        <li>
+          <input type="hidden" name="student" value="<%= s.id %>">
+          <span class="att-roll"><%= s.roll_no || '•' %></span>
+          <span class="att-name"><%= s.name %></span>
+          <input class="marks-input" name="m_<%= s.id %>" type="number" inputmode="decimal" min="0" max="<%= exam.max_marks %>" step="0.5"
+            value="<%= s.marks ?? '' %>" <%= absent ? 'disabled' : '' %> aria-label="Marks for <%= s.name %>">
+          <label class="ab-toggle"><input type="checkbox" name="absent" value="<%= s.id %>" <%= absent ? 'checked' : '' %>><span>AB</span></label>
+        </li>
+      <% }) %>
+    </ul>
+    <button class="btn btn-primary btn-block btn-xl">Save Marks</button>
+  </form>
+  <% } %>
+<% } %>
+<%- include('../partials/footer') %>

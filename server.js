@@ -79,6 +79,7 @@ app.use(require('./routes/students'));
 app.use(require('./routes/fees'));
 app.use(require('./routes/attendance'));
 app.use(require('./routes/reports'));
+app.use(require('./routes/performance'));
 app.use(require('./routes/settings'));
 
 app.use((req, res) => res.status(404).render('error', { title: 'Not found', message: 'That page does not exist.' }));

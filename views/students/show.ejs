@@ -42,6 +42,35 @@ const pctOf = (a, b) => b ? Math.round(a / b * 100) + '%' : '–'; %>
 </div>
 
 <section class="card">
+  <div class="row-between"><h2>Exam results</h2><a class="small" href="/performance/marks?batch=<%= s.batch_id %>">Enter marks</a></div>
+  <% if (!history.length) { %><p class="muted">No marks entered yet.</p><% } else { const latest = history[history.length - 1]; %>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Exam</th><th class="num">Score</th><th>Grade</th><th class="num">Class rank</th><th class="num">Division rank</th></tr></thead>
+        <tbody>
+          <% history.forEach((h, i) => { const prev = history[i - 1]; const diff = prev ? Math.round((h.pct - prev.pct) * 10) / 10 : null; %>
+            <tr>
+              <td><a href="/performance?exam=<%= h.exam.id %>"><%= h.exam.name %></a></td>
+              <td class="num"><strong><%= h.pct %>%</strong><% if (diff) { %> <span class="small <%= diff > 0 ? 'ok' : 'warn' %>"><%= diff > 0 ? '▲' : '▼' %><%= Math.abs(diff) %></span><% } %></td>
+              <td><span class="badge"><%= h.grade %></span></td>
+              <td class="num"><%= h.classRank === 1 ? '🏆 ' : '' %><%= h.classRank %> / <%= h.classRankOf %></td>
+              <td class="num"><%= h.divRank %> / <%= h.divRankOf %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <h2 class="small muted" style="margin-top: 1rem">Subjects in <%= latest.exam.name %></h2>
+    <% subjects.filter(sub => latest.subjects[sub.id]).forEach(sub => { const r = latest.subjects[sub.id]; %>
+      <div class="progress-row">
+        <div class="row-between"><span><%= sub.name %></span><span class="small"><%= r.absent ? 'Absent' : `${r.obtained} / ${r.max}` %> · <strong><%= r.pct %>%</strong></span></div>
+        <div class="bar <%= r.pct < Number(settings.pass_percent) ? 'bar-warn' : '' %>"><span style="width: <%= r.pct %>%"></span></div>
+      </div>
+    <% }) %>
+  <% } %>
+</section>
+
+<section class="card">
   <h2>Payment receipts</h2>
   <% if (!payments.length) { %><p class="muted">No payments yet.</p><% } %>
   <ul class="list">

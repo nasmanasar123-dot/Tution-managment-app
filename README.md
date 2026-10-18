@@ -12,6 +12,16 @@ A simple, mobile-friendly app for a tuition center that does two things: it coll
 - **Student profile:** shows pending amount, all payment receipts (each downloadable as a PDF), month-by-month fee status (Paid, Partial, Due or Waived), attendance %, and a WhatsApp fee reminder.
 - **Attendance:** pick a class, and everyone starts as present. Tap the absentees and save.
 - **Reports:** collections by date range, class and method; pending fees; monthly attendance %. Every report exports to CSV.
+- **Results & Toppers:** enter marks per exam, division and subject (AB for absent). The analysis shows school toppers and toppers by class, division and subject; subject and division averages; grade distribution (CBSE-style A1–E); the most improved students since the previous exam; students who need attention; and attendance vs marks. Each student's profile shows their exam history with class and division rank. Exams, subjects and the pass mark are editable in Settings.
+
+## Demo with sample data
+
+```bash
+npm run demo              # local demo copy with 50 sample students: http://localhost:3001 (demo / demo1234)
+npm run demo -- --reset   # regenerate the sample data
+```
+
+The demo uses its own database (`data/demo/`) and never touches real data.
 
 ## How fees work
 
