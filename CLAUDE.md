@@ -39,7 +39,7 @@ Logs: `journalctl --user -u tuition -n 50 --no-pager`.
 Create or reset the admin login (interactive, run by the user):
 
 ```
-ssh -t nasmanasar123@187.127.162.81 "cd ~/apps/tuition && node --env-file=$HOME/.config/tuition.env scripts/create-admin.js"
+ssh -t nasmanasar123@187.127.162.81 "cd ~/apps/tuition && node --env-file=/home/nasmanasar123/.config/tuition.env scripts/create-admin.js"
 ```
 
 ### Server rules
