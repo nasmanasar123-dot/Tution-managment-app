@@ -1,0 +1,43 @@
+<%- include('../partials/header') %>
+<% const msg = `${settings.center_name}\nFee Receipt ${p.receipt_no}\n\nReceived ${money(p.amount)} from ${p.name} (Class ${p.class}-${p.division}) on ${dateLabel(p.paid_on)} by ${p.method}.\nFor: ${p.covers}\n${pending ? `Balance pending: ${money(pending)}` : 'No balance pending.'}\n\nThank you!`; %>
+
+<% if (isNew) { %>
+  <div class="success-banner">
+    <div class="tick">✓</div>
+    <div><strong><%= money(p.amount) %> received</strong><br><span class="small">Receipt <%= p.receipt_no %> saved</span></div>
+  </div>
+<% } %>
+
+<section class="card receipt <%= p.voided ? 'voided' : '' %>">
+  <% if (p.voided) { %><div class="void-stamp">CANCELLED</div><% } %>
+  <div class="receipt-head">
+    <strong><%= settings.center_name %></strong>
+    <span class="muted small">Fee Receipt</span>
+  </div>
+  <dl class="details">
+    <dt>Receipt no.</dt><dd><%= p.receipt_no %></dd>
+    <dt>Date</dt><dd><%= dateLabel(p.paid_on) %></dd>
+    <dt>Student</dt><dd><a href="/students/<%= p.student_id %>"><%= p.name %></a></dd>
+    <dt>Class</dt><dd><%= p.class %>-<%= p.division %><%= p.roll_no ? ` · Roll ${p.roll_no}` : '' %></dd>
+    <dt>For</dt><dd><%= p.covers %></dd>
+    <dt>Method</dt><dd><%= p.method %></dd>
+    <% if (p.note) { %><dt>Note</dt><dd><%= p.note %></dd><% } %>
+  </dl>
+  <div class="row-between receipt-total"><span>Amount paid</span><strong><%= money(p.amount) %></strong></div>
+  <p class="small muted">Current pending for this student: <%= money(pending) %></p>
+</section>
+
+<div class="action-stack">
+  <a class="btn btn-primary btn-lg" href="/payments/<%= p.id %>/pdf">Download PDF</a>
+  <% if (p.phone && !p.voided) { %>
+    <a class="btn btn-lg btn-wa" target="_blank" rel="noopener" href="https://wa.me/<%= waPhone(p.phone) %>?text=<%= encodeURIComponent(msg) %>">Send on WhatsApp</a>
+  <% } %>
+  <a class="btn btn-lg" href="/collect">Collect another</a>
+</div>
+
+<% if (!p.voided) { %>
+  <form class="danger-zone" method="post" action="/payments/<%= p.id %>/void" data-confirm="Cancel receipt <%= p.receipt_no %>? Use this only for mistakes. The amount will be added back to pending.">
+    <button class="btn btn-danger-link">Cancel this receipt</button>
+  </form>
+<% } %>
+<%- include('../partials/footer') %>

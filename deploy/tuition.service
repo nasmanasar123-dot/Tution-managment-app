@@ -1,0 +1,19 @@
+[Unit]
+Description=Tuition Manager
+After=network.target
+
+[Service]
+Type=simple
+User=tuition
+WorkingDirectory=/opt/tuition
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=TZ=Asia/Kolkata
+# Uncomment only if you have NOT set up HTTPS yet (login cookie won't work over plain http otherwise)
+# Environment=INSECURE_COOKIE=1
+
+[Install]
+WantedBy=multi-user.target

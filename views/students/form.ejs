@@ -1,0 +1,43 @@
+<%- include('../partials/header') %>
+<% const editing = !!s.id; %>
+<div class="page-head">
+  <h1><%= title %></h1>
+  <a class="btn" href="<%= editing ? `/students/${s.id}` : '/students' %>">Cancel</a>
+</div>
+
+<form class="card form" method="post" action="<%= editing ? `/students/${s.id}` : '/students' %>">
+  <% if (errors.length) { %><div class="flash flash-error"><%= errors.join(' ') %></div><% } %>
+  <label>Full name *<input name="name" value="<%= s.name || '' %>" required autofocus></label>
+  <div class="form-row">
+    <label>Class *
+      <select name="batch_id" required>
+        <option value="">Choose…</option>
+        <% batches.forEach(b => { %>
+          <option value="<%= b.id %>" <%= b.id === Number(s.batch_id) ? 'selected' : '' %>>Class <%= b.class %>-<%= b.division %> (<%= money(b.monthly_fee) %>/month)</option>
+        <% }) %>
+      </select>
+    </label>
+    <label>Roll no.<input name="roll_no" value="<%= s.roll_no || '' %>" inputmode="numeric"></label>
+  </div>
+  <div class="form-row">
+    <label>Parent / guardian name<input name="parent_name" value="<%= s.parent_name || '' %>"></label>
+    <label>Parent phone (WhatsApp)<input name="phone" value="<%= s.phone || '' %>" type="tel" inputmode="tel" placeholder="10-digit mobile"></label>
+  </div>
+  <div class="form-row">
+    <label>Joining date *<input name="joined_on" type="date" value="<%= s.joined_on || '' %>" required></label>
+    <label>Charge fees from *<input name="fee_start_month" type="month" value="<%= s.fee_start_month || '' %>" required>
+      <span class="hint">First month the monthly fee is due.</span></label>
+  </div>
+  <label>Notes<textarea name="notes" rows="2"><%= s.notes || '' %></textarea></label>
+  <div class="form-actions">
+    <button class="btn btn-primary btn-lg">Save</button>
+    <% if (!editing) { %><button class="btn btn-lg" name="again" value="1">Save &amp; add another</button><% } %>
+  </div>
+</form>
+
+<% if (editing) { %>
+  <form class="danger-zone" method="post" action="/students/<%= s.id %>/delete" data-confirm="Delete this student permanently? This only works if they have no payments.">
+    <button class="btn btn-danger-link">Delete student</button>
+  </form>
+<% } %>
+<%- include('../partials/footer') %>

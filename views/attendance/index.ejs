@@ -1,0 +1,26 @@
+<%- include('../partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Attendance</h1>
+    <p class="muted">Pick a class to mark attendance</p>
+  </div>
+  <form method="get" action="/attendance">
+    <input type="date" name="date" value="<%= date %>" max="<%= today() %>" onchange="this.form.submit()" aria-label="Date">
+  </form>
+</div>
+
+<% [8, 9, 10].forEach(cls => { %>
+  <section class="card">
+    <h2>Class <%= cls %></h2>
+    <div class="batch-grid">
+      <% batches.filter(b => b.class === cls).forEach(b => { %>
+        <a class="batch-tile <%= b.marked ? 'done' : '' %>" href="/attendance?batch=<%= b.id %>&date=<%= date %>">
+          <strong><%= b.class %>-<%= b.division %></strong>
+          <span class="small"><%= b.marked ? `${b.present}/${b.marked} present` : `${b.total} students` %></span>
+          <span class="small tile-status"><%= b.marked ? '✓ Marked' : 'Not marked' %></span>
+        </a>
+      <% }) %>
+    </div>
+  </section>
+<% }) %>
+<%- include('../partials/footer') %>

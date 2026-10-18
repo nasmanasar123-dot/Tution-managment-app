@@ -1,0 +1,92 @@
+<%- include('../partials/header') %>
+<% const s = student;
+const reminder = `Dear ${s.parent_name || 'Parent'}, this is a reminder from ${settings.center_name} that the tuition fee of ${money(t.pending)} for ${s.name} (Class ${s.class}-${s.division}) is pending. Kindly pay at the earliest. Thank you.`;
+const pctOf = (a, b) => b ? Math.round(a / b * 100) + '%' : '–'; %>
+
+<div class="page-head">
+  <div>
+    <h1><%= s.name %> <% if (!s.active) { %><span class="badge">Left</span><% } %></h1>
+    <p class="muted">Class <%= s.class %>-<%= s.division %><%= s.roll_no ? ` · Roll ${s.roll_no}` : '' %> · <%= money(s.monthly_fee) %>/month</p>
+  </div>
+  <a class="btn" href="/students/<%= s.id %>/edit">Edit</a>
+</div>
+
+<div class="grid-2">
+  <section class="card fee-card">
+    <span class="stat-label">Pending fees</span>
+    <strong class="big <%= t.pending ? 'warn' : 'ok' %>"><%= money(t.pending) %></strong>
+    <% if (t.credit) { %><p class="ok small">Advance credit: <%= money(t.credit) %></p><% } %>
+    <p class="muted small">Total charged <%= money(t.due) %> · Total paid <%= money(t.paid) %></p>
+    <div class="form-actions">
+      <a class="btn btn-primary btn-lg" href="/collect/<%= s.id %>">Collect Fee</a>
+      <% if (t.pending && s.phone) { %>
+        <a class="btn btn-lg btn-wa" target="_blank" rel="noopener" href="https://wa.me/<%= waPhone(s.phone) %>?text=<%= encodeURIComponent(reminder) %>">Send reminder</a>
+      <% } %>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Details</h2>
+    <dl class="details">
+      <dt>Parent</dt><dd><%= s.parent_name || '–' %></dd>
+      <dt>Phone</dt><dd><% if (s.phone) { %><a href="tel:<%= s.phone %>"><%= s.phone %></a><% } else { %>–<% } %></dd>
+      <dt>Joined</dt><dd><%= dateLabel(s.joined_on) %></dd>
+      <dt>Fees from</dt><dd><%= monthLabel(s.fee_start_month) %></dd>
+      <dt>Attendance</dt><dd>This month <%= att.mPresent || 0 %>/<%= att.mTotal || 0 %> (<%= pctOf(att.mPresent, att.mTotal) %>) · Overall <%= pctOf(att.present, att.total) %></dd>
+      <% if (s.notes) { %><dt>Notes</dt><dd><%= s.notes %></dd><% } %>
+    </dl>
+    <% if (absences.length) { %>
+      <p class="small muted">Recent absences: <%= absences.map(a => dateLabel(a.date)).join(', ') %></p>
+    <% } %>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Payment receipts</h2>
+  <% if (!payments.length) { %><p class="muted">No payments yet.</p><% } %>
+  <ul class="list">
+    <% payments.forEach(p => { %>
+      <li class="<%= p.voided ? 'voided' : '' %>">
+        <a class="list-main" href="/payments/<%= p.id %>">
+          <strong><%= money(p.amount) %> <span class="muted small">· <%= p.method %></span></strong>
+          <span class="muted small"><%= p.receipt_no %> · <%= dateLabel(p.paid_on) %> · <%= p.covers %></span>
+        </a>
+        <% if (p.voided) { %><span class="badge badge-danger">Cancelled</span><% } %>
+        <a class="btn btn-sm" href="/payments/<%= p.id %>/pdf">PDF</a>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+
+<section class="card" id="months">
+  <h2>Month-wise fees</h2>
+  <% if (!months.length) { %><p class="muted">No fees charged yet. Fees start <%= monthLabel(s.fee_start_month) %>.</p><% } %>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Month</th><th class="num">Fee</th><th class="num">Paid</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <% months.forEach(m => { %>
+          <tr>
+            <td><%= monthLabel(m.month) %></td>
+            <td class="num"><%= money(m.amount) %></td>
+            <td class="num"><%= m.status === 'waived' ? '–' : money(m.paid) %></td>
+            <td><span class="badge badge-<%= { paid: 'ok', partial: 'warn', due: 'danger', waived: '' }[m.status] %>"><%= { paid: 'Paid', partial: 'Partial', due: 'Due', waived: 'Waived' }[m.status] %></span></td>
+            <td class="num">
+              <% if (m.status !== 'paid') { %>
+                <form method="post" action="/students/<%= s.id %>/dues/<%= m.month %>/waive" data-confirm="<%= m.waived ? 'Charge the fee for this month again?' : 'Waive the fee for this month (e.g. holiday or absence)?' %>">
+                  <button class="link-btn small"><%= m.waived ? 'Undo waive' : 'Waive' %></button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<form class="danger-zone" method="post" action="/students/<%= s.id %>/active"
+  data-confirm="<%= s.active ? 'Mark this student as left? No new monthly fees will be charged.' : 'Re-activate this student? Fees resume from this month.' %>">
+  <button class="btn <%= s.active ? 'btn-danger-link' : '' %>"><%= s.active ? 'Mark as left' : 'Re-activate student' %></button>
+</form>
+<%- include('../partials/footer') %>

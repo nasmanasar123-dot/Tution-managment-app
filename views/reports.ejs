@@ -1,0 +1,107 @@
+<%- include('partials/header') %>
+<% const qs = obj => new URLSearchParams(Object.entries(obj).filter(([, v]) => v)).toString();
+const csvLink = '/reports?' + qs({ ...q, type, format: 'csv' }); %>
+<div class="page-head">
+  <h1>Reports</h1>
+  <a class="btn" href="<%= csvLink %>">Export CSV</a>
+</div>
+
+<nav class="tabs">
+  <a href="/reports?type=collections" class="<%= type === 'collections' ? 'on' : '' %>">Collections</a>
+  <a href="/reports?type=pending" class="<%= type === 'pending' ? 'on' : '' %>">Pending fees</a>
+  <a href="/reports?type=attendance" class="<%= type === 'attendance' ? 'on' : '' %>">Attendance</a>
+</nav>
+
+<form class="filters card" method="get" action="/reports">
+  <input type="hidden" name="type" value="<%= type %>">
+  <% if (type === 'collections') { %>
+    <label class="inline">From<input type="date" name="from" value="<%= from %>"></label>
+    <label class="inline">To<input type="date" name="to" value="<%= to %>"></label>
+    <select name="method">
+      <option value="">All methods</option>
+      <% ['Cash', 'UPI', 'Bank Transfer', 'Cheque'].forEach(m => { %><option <%= m === method ? 'selected' : '' %>><%= m %></option><% }) %>
+    </select>
+  <% } else if (type === 'attendance') { %>
+    <label class="inline">Month<input type="month" name="month" value="<%= month %>"></label>
+  <% } %>
+  <select name="batch">
+    <option value="">All classes</option>
+    <% batches.forEach(b => { %><option value="<%= b.id %>" <%= b.id === batchId ? 'selected' : '' %>>Class <%= b.class %>-<%= b.division %></option><% }) %>
+  </select>
+  <button class="btn">Apply</button>
+</form>
+
+<% if (type === 'collections') { %>
+  <section class="stats">
+    <div class="stat"><span class="stat-label">Total collected</span><strong class="stat-value"><%= money(total) %></strong><span class="muted small"><%= rows.length %> receipts</span></div>
+    <% Object.entries(byMethod).forEach(([m, v]) => { %>
+      <div class="stat"><span class="stat-label"><%= m %></span><strong class="stat-value"><%= money(v) %></strong></div>
+    <% }) %>
+  </section>
+  <section class="card">
+    <% if (!rows.length) { %><p class="muted">No payments in this period.</p><% } else { %>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Date</th><th>Receipt</th><th>Student</th><th>Class</th><th>Method</th><th>For</th><th class="num">Amount</th></tr></thead>
+        <tbody>
+          <% rows.forEach(r => { %>
+            <tr>
+              <td class="nowrap"><%= dateLabel(r.paid_on) %></td>
+              <td><a href="/payments/<%= r.id %>"><%= r.receipt_no %></a></td>
+              <td><a href="/students/<%= r.student_id %>"><%= r.name %></a></td>
+              <td><%= r.class %>-<%= r.division %></td>
+              <td><%= r.method %></td>
+              <td class="small"><%= r.covers %></td>
+              <td class="num"><%= money(r.amount) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+        <tfoot><tr><td colspan="6">Total</td><td class="num"><%= money(total) %></td></tr></tfoot>
+      </table>
+    </div>
+    <% } %>
+  </section>
+
+<% } else if (type === 'pending') { %>
+  <section class="stats">
+    <div class="stat stat-warn"><span class="stat-label">Total pending</span><strong class="stat-value"><%= money(total) %></strong><span class="muted small"><%= rows.length %> students</span></div>
+  </section>
+  <section class="card">
+    <% if (!rows.length) { %><p class="muted">No pending fees. 🎉</p><% } %>
+    <ul class="list">
+      <% rows.forEach(r => { %>
+        <li>
+          <a class="list-main" href="/students/<%= r.id %>">
+            <strong><%= r.name %></strong>
+            <span class="muted small">Class <%= r.class %>-<%= r.division %><%= r.phone ? ` · ${r.phone}` : '' %> · <%= Math.ceil(r.pending / (r.monthly_fee || r.pending)) %> month(s)</span>
+          </a>
+          <span class="amount warn"><%= money(r.pending) %></span>
+          <a class="btn btn-sm" href="/collect/<%= r.id %>">Collect</a>
+        </li>
+      <% }) %>
+    </ul>
+  </section>
+
+<% } else { %>
+  <section class="card">
+    <% if (!rows.length) { %><p class="muted">No students.</p><% } else { %>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Student</th><th>Class</th><th class="num">Present</th><th class="num">Held</th><th class="num">%</th></tr></thead>
+        <tbody>
+          <% rows.forEach(r => { %>
+            <tr>
+              <td><a href="/students/<%= r.id %>"><%= r.name %></a></td>
+              <td><%= r.class %>-<%= r.division %></td>
+              <td class="num"><%= r.present %></td>
+              <td class="num"><%= r.total %></td>
+              <td class="num"><% if (r.pct == null) { %>–<% } else { %><span class="badge badge-<%= r.pct >= 75 ? 'ok' : r.pct >= 50 ? 'warn' : 'danger' %>"><%= r.pct %>%</span><% } %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </section>
+<% } %>
+<%- include('partials/footer') %>

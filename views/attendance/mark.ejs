@@ -1,0 +1,40 @@
+<%- include('../partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Class <%= batch.class %>-<%= batch.division %></h1>
+    <p class="muted"><%= dateLabel(date) %><%= marked ? ' · already marked, you can edit' : '' %></p>
+  </div>
+  <a class="btn" href="/attendance?date=<%= date %>">Back</a>
+</div>
+
+<% if (!students.length) { %>
+  <section class="card"><p class="muted">No students in this class yet. <a href="/students/new?batch=<%= batch.id %>">Add a student</a></p></section>
+<% } else { %>
+<form class="card" method="post" action="/attendance" id="attendance-form">
+  <input type="hidden" name="batch_id" value="<%= batch.id %>">
+  <input type="hidden" name="date" value="<%= date %>">
+  <div class="row-between att-summary">
+    <span><strong id="present-count"></strong> present · <strong id="absent-count"></strong> absent</span>
+    <span>
+      <button type="button" class="link-btn small" data-mark="all">All present</button> ·
+      <button type="button" class="link-btn small" data-mark="none">All absent</button>
+    </span>
+  </div>
+  <p class="small muted">Everyone starts as present. Tap a student to mark them absent.</p>
+  <ul class="att-list">
+    <% students.forEach(s => { %>
+      <li>
+        <input type="hidden" name="student" value="<%= s.id %>">
+        <label class="att-item">
+          <input type="checkbox" name="present" value="<%= s.id %>" <%= s.status === 'A' ? '' : 'checked' %>>
+          <span class="att-roll"><%= s.roll_no || '•' %></span>
+          <span class="att-name"><%= s.name %></span>
+          <span class="att-state"></span>
+        </label>
+      </li>
+    <% }) %>
+  </ul>
+  <button class="btn btn-primary btn-block btn-xl">Save Attendance</button>
+</form>
+<% } %>
+<%- include('../partials/footer') %>

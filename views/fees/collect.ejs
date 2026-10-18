@@ -1,0 +1,48 @@
+<%- include('../partials/header') %>
+<% const s = student; const chosen = typeof method !== 'undefined' && method ? method : 'Cash'; %>
+<div class="page-head">
+  <div>
+    <h1>Collect Fee</h1>
+    <p class="muted"><a href="/students/<%= s.id %>"><%= s.name %></a> · Class <%= s.class %>-<%= s.division %><%= s.roll_no ? ` · Roll ${s.roll_no}` : '' %></p>
+  </div>
+  <a class="btn" href="/collect">Change</a>
+</div>
+
+<form class="card form" method="post" action="/collect/<%= s.id %>" id="collect-form" data-student="<%= s.id %>">
+  <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+
+  <div class="row-between pending-line">
+    <span>Pending</span>
+    <strong class="<%= t.pending ? 'warn' : 'ok' %>"><%= money(t.pending) %></strong>
+  </div>
+  <% if (t.credit) { %><p class="small ok">Advance credit: <%= money(t.credit) %></p><% } %>
+  <% if (unpaid.length) { %>
+    <div class="chips">
+      <% unpaid.forEach(m => { %><span class="chip chip-warn"><%= monthLabel(m.month) %><%= m.status === 'partial' ? ` (${money(m.amount - m.paid)} left)` : '' %></span><% }) %>
+    </div>
+  <% } %>
+
+  <label>Amount (₹)
+    <input class="input-xl" name="amount" id="amount" type="number" inputmode="numeric" min="1" step="1" value="<%= amount %>" required>
+  </label>
+  <div class="quick-amounts">
+    <% if (t.pending) { %><button type="button" class="chip-btn" data-amount="<%= t.pending %>">All pending <%= money(t.pending) %></button><% } %>
+    <% [1, 2, 3].forEach(n => { %><button type="button" class="chip-btn" data-amount="<%= s.monthly_fee * n %>"><%= n %> month<%= n > 1 ? 's' : '' %></button><% }) %>
+  </div>
+  <p class="small muted">Covers: <strong id="covers">…</strong></p>
+
+  <fieldset class="segmented">
+    <legend>Payment method</legend>
+    <% methods.forEach(m => { %>
+      <label><input type="radio" name="method" value="<%= m %>" <%= m === chosen ? 'checked' : '' %>><span><%= m %></span></label>
+    <% }) %>
+  </fieldset>
+
+  <div class="form-row">
+    <label>Date<input type="date" name="paid_on" value="<%= today %>" max="<%= today %>" required></label>
+    <label>Note (optional)<input name="note" value="<%= typeof note !== 'undefined' ? note || '' : '' %>" placeholder="e.g. UPI ref no."></label>
+  </div>
+
+  <button class="btn btn-primary btn-block btn-xl" id="collect-submit">Save &amp; Generate Receipt</button>
+</form>
+<%- include('../partials/footer') %>

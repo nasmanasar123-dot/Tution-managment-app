@@ -1,0 +1,112 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="muted"><%= dateLabel(today()) %></p>
+  </div>
+  <a class="btn btn-primary btn-lg" href="/collect">+ Collect Fee</a>
+</div>
+
+<% const pct = stats.expected ? Math.min(100, Math.round(stats.month / stats.expected * 100)) : 0; %>
+<section class="stats">
+  <div class="stat">
+    <span class="stat-label">Collected today</span>
+    <strong class="stat-value"><%= money(stats.today) %></strong>
+    <span class="muted small"><%= stats.todayCount %> payment<%= stats.todayCount === 1 ? '' : 's' %></span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">This month</span>
+    <strong class="stat-value"><%= money(stats.month) %></strong>
+    <div class="bar"><span style="width: <%= pct %>%"></span></div>
+    <span class="muted small"><%= pct %>% of <%= money(stats.expected) %> fees this month</span>
+  </div>
+  <div class="stat stat-warn">
+    <span class="stat-label">Total pending</span>
+    <strong class="stat-value"><%= money(stats.pending) %></strong>
+    <a class="small" href="/reports?type=pending"><%= stats.pendingCount %> student<%= stats.pendingCount === 1 ? '' : 's' %> &rarr;</a>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Active students</span>
+    <strong class="stat-value"><%= stats.students %></strong>
+    <span class="muted small">Last month: <%= money(stats.lastMonth) %> collected</span>
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Collections, last 6 months</h2>
+    <% const max = Math.max(...chart.values, 1); %>
+    <div class="bars" role="img" aria-label="Monthly collections">
+      <% chart.labels.forEach((label, i) => { const v = chart.values[i]; %>
+        <div class="bar-col <%= i === chart.labels.length - 1 ? 'current' : '' %>" title="<%= label %>: <%= money(v) %>">
+          <span class="bar-val"><%= v >= 1000 ? (Math.round(v / 100) / 10) + 'k' : v %></span>
+          <div class="bar-fill" style="height: <%= Math.max(2, Math.round(v / max * 100)) %>%"></div>
+          <span class="bar-label"><%= label.slice(0, 3) %></span>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>This month by class</h2>
+    <% byClass.forEach(c => { const p = c.expected ? Math.min(100, Math.round(c.collected / c.expected * 100)) : 0; %>
+      <div class="progress-row">
+        <div class="row-between"><strong>Class <%= c.class %></strong><span class="small"><%= money(c.collected) %> <span class="muted">/ <%= money(c.expected) %></span></span></div>
+        <div class="bar"><span style="width: <%= p %>%"></span></div>
+      </div>
+    <% }) %>
+    <% if (methods.length) { %>
+      <div class="chips">
+        <% methods.forEach(m => { %><span class="chip"><%= m.method %>: <strong><%= money(m.total) %></strong></span><% }) %>
+      </div>
+    <% } %>
+  </section>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="row-between"><h2>Pending fees</h2><a class="small" href="/reports?type=pending">View all</a></div>
+    <% if (!pending.length) { %><p class="muted">Everyone is paid up. 🎉</p><% } %>
+    <ul class="list">
+      <% pending.forEach(s => { %>
+        <li>
+          <a class="list-main" href="/students/<%= s.id %>">
+            <strong><%= s.name %></strong>
+            <span class="muted small"><%= s.class %>-<%= s.division %> · <%= Math.ceil(s.pending / (s.monthly_fee || s.pending)) %> month(s)</span>
+          </a>
+          <span class="amount warn"><%= money(s.pending) %></span>
+          <a class="btn btn-sm" href="/collect/<%= s.id %>">Collect</a>
+        </li>
+      <% }) %>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="row-between"><h2>Recent payments</h2><a class="small" href="/reports">View all</a></div>
+    <% if (!recent.length) { %><p class="muted">No payments yet.</p><% } %>
+    <ul class="list">
+      <% recent.forEach(p => { %>
+        <li>
+          <a class="list-main" href="/payments/<%= p.id %>">
+            <strong><%= p.name %></strong>
+            <span class="muted small"><%= p.receipt_no %> · <%= dateLabel(p.paid_on) %> · <%= p.method %></span>
+          </a>
+          <span class="amount ok"><%= money(p.amount) %></span>
+        </li>
+      <% }) %>
+    </ul>
+  </section>
+</div>
+
+<section class="card">
+  <div class="row-between"><h2>Today's attendance</h2><a class="small" href="/attendance">Mark attendance</a></div>
+  <div class="batch-grid">
+    <% attendance.forEach(b => { %>
+      <a class="batch-tile <%= b.marked ? 'done' : '' %>" href="/attendance?batch=<%= b.id %>">
+        <strong><%= b.class %>-<%= b.division %></strong>
+        <span class="small"><%= b.marked ? `${b.present}/${b.marked} present` : 'Not marked' %></span>
+      </a>
+    <% }) %>
+  </div>
+</section>
+<%- include('partials/footer') %>

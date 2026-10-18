@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2563eb">
+  <title>Login · <%= settings.center_name %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="login-page">
+  <form class="card login-card" method="post" action="/login">
+    <div class="logo logo-lg">₹</div>
+    <h1><%= settings.center_name %></h1>
+    <p class="muted">Sign in to manage fees and attendance</p>
+    <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+    <label>Username<input name="username" autocomplete="username" autocapitalize="none" required autofocus></label>
+    <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+    <button class="btn btn-primary btn-block btn-lg">Sign in</button>
+  </form>
+</body>
+</html>

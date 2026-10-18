@@ -1,0 +1,22 @@
+<%- include('../partials/header') %>
+<div class="page-head"><h1>Collect Fee</h1></div>
+
+<section class="card">
+  <label class="search-big">
+    <span class="sr-only">Search student</span>
+    <input id="student-search" type="search" placeholder="Type student name, phone or roll no." autocomplete="off" autofocus>
+  </label>
+  <ul class="list" id="search-results" aria-live="polite"></ul>
+  <% if (recent.length) { %>
+    <div id="recent-block">
+      <h2 class="small muted">Recently paid</h2>
+      <ul class="list">
+        <% recent.forEach(s => { %>
+          <li><a class="list-main" href="/collect/<%= s.id %>"><strong><%= s.name %></strong><span class="muted small">Class <%= s.class %>-<%= s.division %></span></a><span class="chev">&rsaquo;</span></li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
+  <p class="small muted">Or browse <a href="/students">all students by class</a>.</p>
+</section>
+<%- include('../partials/footer') %>

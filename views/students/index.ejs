@@ -1,0 +1,46 @@
+<%- include('../partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Students</h1>
+    <p class="muted"><%= list.length %> <%= showInactive ? 'former' : 'active' %> student<%= list.length === 1 ? '' : 's' %></p>
+  </div>
+  <a class="btn btn-primary" href="/students/new<%= batchId ? `?batch=${batchId}` : '' %>">+ Add Student</a>
+</div>
+
+<form class="filters card" method="get" action="/students">
+  <input type="search" name="q" value="<%= q %>" placeholder="Search name, phone or roll no.">
+  <select name="batch" onchange="this.form.submit()">
+    <option value="">All classes</option>
+    <% batches.forEach(b => { %><option value="<%= b.id %>" <%= b.id === batchId ? 'selected' : '' %>>Class <%= b.class %>-<%= b.division %></option><% }) %>
+  </select>
+  <select name="status" onchange="this.form.submit()">
+    <option value="">Active</option>
+    <option value="inactive" <%= showInactive ? 'selected' : '' %>>Left / inactive</option>
+  </select>
+  <button class="btn">Search</button>
+</form>
+
+<section class="card">
+  <% if (!list.length) { %>
+    <p class="muted">No students found. <a href="/students/new">Add a student</a></p>
+  <% } %>
+  <ul class="list">
+    <% list.forEach(s => { %>
+      <li>
+        <a class="list-main" href="/students/<%= s.id %>">
+          <strong><%= s.name %></strong>
+          <span class="muted small">Class <%= s.class %>-<%= s.division %><%= s.roll_no ? ` · Roll ${s.roll_no}` : '' %><%= s.phone ? ` · ${s.phone}` : '' %></span>
+        </a>
+        <% if (!showInactive) { %>
+          <% if (s.pending > 0) { %>
+            <span class="amount warn"><%= money(s.pending) %></span>
+            <a class="btn btn-sm" href="/collect/<%= s.id %>">Collect</a>
+          <% } else { %>
+            <span class="badge badge-ok">Paid</span>
+          <% } %>
+        <% } else { %><span class="badge">Left</span><% } %>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+<%- include('../partials/footer') %>

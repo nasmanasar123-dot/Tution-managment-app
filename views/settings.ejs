@@ -1,0 +1,54 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <h1>Settings</h1>
+  <form method="post" action="/logout"><button class="btn">Log out</button></form>
+</div>
+
+<section class="card">
+  <h2>Monthly fees</h2>
+  <p class="small muted">Months already charged keep their old amount.</p>
+  <form method="post" action="/settings/fees" class="form" data-confirm="Save the new monthly fees?">
+    <div class="fee-grid">
+      <% batches.forEach(b => { %>
+        <label>Class <%= b.class %>-<%= b.division %> <span class="muted small">(<%= b.students %> students)</span>
+          <input type="number" name="fee_<%= b.id %>" value="<%= b.monthly_fee %>" min="0" step="1" inputmode="numeric" required>
+        </label>
+      <% }) %>
+    </div>
+    <label>New fee applies from
+      <select name="effective">
+        <option value="next">Next month (<%= monthLabel(addMonths(currentMonth(), 1)) %>)</option>
+        <option value="this">This month (<%= monthLabel(currentMonth()) %>), including students who already paid</option>
+      </select>
+    </label>
+    <button class="btn btn-primary">Save fees</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Center details</h2>
+  <p class="small muted">Shown on receipts.</p>
+  <form method="post" action="/settings/center" class="form">
+    <label>Center name<input name="center_name" value="<%= settings.center_name %>" required></label>
+    <label>Address<input name="center_address" value="<%= settings.center_address %>"></label>
+    <div class="form-row">
+      <label>Phone<input name="center_phone" value="<%= settings.center_phone %>" type="tel"></label>
+      <label>Receipt number prefix<input name="receipt_prefix" value="<%= settings.receipt_prefix %>" maxlength="10"></label>
+    </div>
+    <button class="btn btn-primary">Save details</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Change password</h2>
+  <form method="post" action="/settings/password" class="form">
+    <input type="hidden" name="username" value="<%= user.username %>" autocomplete="username">
+    <label>Current password<input type="password" name="current" autocomplete="current-password" required></label>
+    <div class="form-row">
+      <label>New password<input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Confirm new password<input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label>
+    </div>
+    <button class="btn btn-primary">Change password</button>
+  </form>
+</section>
+<%- include('partials/footer') %>
